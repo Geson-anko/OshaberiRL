@@ -102,6 +102,7 @@ def get_MAD(sound_file:str,midi_file:str,out_path:str) -> np.ndarray:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    
 
     midi_file = "data/nyan_cat_base.mid"
     #print(*midi2freq_duration(midi_file))

@@ -8,6 +8,13 @@ def get_preprocess_parser(parser:argparse.ArgumentParser=None) -> argparse.Argum
     parser.add_argument("--config_file",type=str, default="hparams/origin.json")
     return parser
 
+def get_env_paraser(parser:argparse.ArgumentParser=None) -> argparse.ArgumentParser:
+    if not parser:
+        parser =argparse.ArgumentParser()
+    parser.add_argument("--config_file",type=str, default="hparams/origin.json")
+    parser.add_argument("--dataset",type=str)
+    parser.add_argument("--on_memory",type=bool,default=True)
+
 def get_training_parser(parser:argparse.ArgumentParser=None) -> argparse.ArgumentParser:
     if not parser:
         parser =argparse.ArgumentParser()

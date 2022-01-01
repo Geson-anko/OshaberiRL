@@ -20,7 +20,7 @@ class RandomSample(DataUtil.Dataset):
         self.length_order = length_order
         self.paths = data_csv["path"].tolist()
 
-        self.sample_length = config.n_fft + config.hop_len
+        self.sample_length = config.breath_len
         if max_length is None:
             self._len = int(self.overall_len/self.sample_length)
         else:

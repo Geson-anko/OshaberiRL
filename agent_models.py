@@ -127,7 +127,7 @@ class SACActor(nn.Module):
         x = self.layer_mean(x).tanh().squeeze(0) # delete axis
         return x
 
-    def sample(self,states:tuple[torch.Tensor]) -> torch.Tensor:
+    def sample(self,states:tuple[torch.Tensor]) -> tuple[torch.Tensor]:
         x = self.layer1(states[0][None,],states[1][None,]) # new axis
         means,log_stds = self.layer_mean(x).squeeze(0),self.layer_log_std(x).squeeze(0) # delete axis
         return reparameterize(means,log_stds.clamp(-20,2))

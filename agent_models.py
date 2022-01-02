@@ -123,13 +123,13 @@ class SACActor(nn.Module):
         return : (actions)
         """
         #assert states[0].shape == states[1].shape
-        x = self.layer1(states[0],states[1]).relu()
-        x = self.layer_mean(x).tanh()
+        x = self.layer1(states[0][None,],states[1][None,]).relu() # new axis
+        x = self.layer_mean(x).tanh().squeeze(0) # delete axis
         return x
 
     def sample(self,states:tuple[torch.Tensor]) -> torch.Tensor:
-        x = self.layer1(states[0],states[1])
-        means,log_stds = self.layer_mean(x),self.layer_log_std(x)
+        x = self.layer1(states[0][None,],states[1][None,]) # new axis
+        means,log_stds = self.layer_mean(x).squeeze(0),self.layer_log_std(x).squeeze(0) # delete axis
         return reparameterize(means,log_stds.clamp(-20,2))
 
 class _sac_critic(nn.Module):
@@ -150,10 +150,10 @@ class _sac_critic(nn.Module):
 
     def forward(self, states:tuple[torch.Tensor],action:torch.Tensor) -> torch.Tensor:
 
-        x1 = self.s_net(states[0],states[1])
-        x2= self.a_net(action)
+        x1 = self.s_net(states[0][None,],states[1][None,]) # new axis
+        x2= self.a_net(action[None,])
         x = torch.cat([x1,x2],dim=-1).relu()
-        x = self.linear_post(x)
+        x = self.linear_post(x).squeeze(0) # delete axis
         return x
 
 class SACCritic(nn.Module):

@@ -111,7 +111,9 @@ class OshaberiEnv(object):
         gl = generated_spect.size(0)
         tgt = self.source_spect[previous_length:gl]
         g= generated_spect[previous_length:]
-        return -F.mse_loss(g,tgt,reduction="sum")
+        delta = tgt - g
+        r = -torch.sum(torch.mean(delta * delta,dim=1))
+        return r
     
     def get_duration(self,out_duration:float) -> int:
         """convert output duration to real duration"""

@@ -50,12 +50,13 @@ class OshaberiEnv(object):
 
         self.reset()
 
-    def reset(self) -> None:
+    def reset(self) -> tuple[torch.Tensor]:
         """reset env. """
         self.set_initial_state()
         self.load_base_voice()
         self.generated_wave = np.empty((0,),np.float32)
         self.generated_spect_len  = 0
+        return (self.source_spect.T, self.generated_pad_spect.T)
 
     source_spect:torch.Tensor# (timestep, channels)
     generated_pad_spect:torch.Tensor

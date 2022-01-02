@@ -79,10 +79,10 @@ class OshaberiEnv(object):
         self.base_voice_silence = np.zeros_like(self.base_voice)
 
 
-    def step(self,action:torch.Tensor) -> tuple[torch.Tensor,float,bool,None]:
+    def step(self,action:torch.Tensor) -> tuple[torch.Tensor,float,bool,float]:
         """step to next state and return infomations.
         action: (3,) [pitch, power, duration] -1 ~ 1
-        return -> (src_spect, generated_spect), reward, done
+        return -> (src_spect, generated_spect), reward, done, mean_reward (mse)
         """
         assert action.size(0) == self.action_space_size
         pitch,power,duration = action.cpu().detach().numpy()
@@ -95,6 +95,8 @@ class OshaberiEnv(object):
         wave = torch.from_numpy(self.generated_wave).to(self.device,self.dtype)
         gened_spect = self.mel_spector(wave).log1p().T
         reward = self.get_reward(gened_spect,self.generated_spect_len)
+        mean_reward = reward / (gened_spect.size(0) - self.generated_spect_len)
+
 
         self.generated_spect_len = gened_spect.size(0)
         gened_spect = torch.cat([gened_spect, self.generated_pad_spect[self.generated_spect_len:] ] ,dim=0)
@@ -102,7 +104,7 @@ class OshaberiEnv(object):
         next_state = (self.source_spect.T,gened_spect.T)
         done = self.generated_spect_len >= self.source_spect.size(0)
 
-        return next_state,reward,done,None
+        return next_state,reward,done,mean_reward
         
     def get_reward(self, generated_spect:torch.Tensor,previous_length:int) -> float:
         """return is -1 * mse 

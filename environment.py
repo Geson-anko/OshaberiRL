@@ -152,6 +152,12 @@ class OshaberiEnv(object):
         wave = np.round(self.generated_wave.copy() * self.sample_range).astype(np.int16)
         wavfile.write(out_path,self.frame_rate,wave)
 
+    def seed(self, seed:int) -> None:
+        """ re-set seed."""
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+
 
 
 

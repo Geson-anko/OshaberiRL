@@ -7,7 +7,7 @@ import numpy as np
 from pydub import AudioSegment
 import torch.nn.functional as F
 from scipy.io import wavfile
-
+import warnings
 
 
 class OshaberiEnv(object):
@@ -56,6 +56,7 @@ class OshaberiEnv(object):
         self.load_base_voice()
         self.generated_wave = np.empty((0,),np.float32)
         self.generated_spect_len  = 0
+        self.generated_spect = self.generated_pad_spect
         return (self.source_spect.T, self.generated_pad_spect.T)
 
     source_spect:torch.Tensor# (timestep, channels)
@@ -65,8 +66,13 @@ class OshaberiEnv(object):
         wave = self.dataset[0][0].squeeze(0).to(self.device,self.dtype)
         mel = torch.log1p(self.mel_spector(wave)).T
         self.source_spect = mel
-        self.generated_pad_spect = torch.ones_like(mel) * -1        
-        
+        self.generated_pad_spect = torch.ones_like(mel) * -1
+
+    def set_source_spect(self, source_spect:torch.Tensor) -> None:
+        """set given value to self.source_spect"""
+        assert source_spect.size() == self.source_spect.size()
+        self.source_spect = source_spect.to(self.device,self.dtype)
+
     base_voice:np.ndarray #(samples,)
     base_voice_silence:np.ndarray
     def load_base_voice(self) -> None:
@@ -84,6 +90,10 @@ class OshaberiEnv(object):
         action: (3,) [pitch, power, duration] -1 ~ 1
         return -> (src_spect, generated_spect), reward, done, mean_reward (mse)
         """
+        if self.generated_spect_len >= self.source_spect.size(0):
+            warnings.warn("Step is done! please reset()")
+            return (self.source_spect.T,self.generated_spect.T), 0.0, True, 0.0
+            
         assert action.size(0) == self.action_space_size
         pitch,power,duration = action.cpu().detach().numpy()
         pitch = self.get_n_shift(pitch)
@@ -103,7 +113,7 @@ class OshaberiEnv(object):
 
         self.generated_spect_len = gened_spect.size(0)
         gened_spect = torch.cat([gened_spect, self.generated_pad_spect[self.generated_spect_len:] ] ,dim=0)
-
+        self.generated_spect = gened_spect
         next_state = (self.source_spect.T,gened_spect.T)
         done = self.generated_spect_len >= self.source_spect.size(0)
 

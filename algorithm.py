@@ -255,3 +255,19 @@ class SAC(Algorithm):
     def log_scaler(self, name:str, value) -> None:
         if self.logger:
             self.logger.add_scalar(name,value,self.learning_steps)
+
+    @torch.no_grad()
+    def generate_voice(self,env:OshaberiEnv, source_spect:torch.Tensor=None) -> np.ndarray:
+        """
+        source spect: (C,L)
+        """
+        env.reset()
+        if source_spect:
+            env.set_source_spect(source_spect.T)
+        state = (source_spect,env.generated_spect)
+        done = False
+        while not done:
+            action = self.exploit(state)
+            state,_,_,_ = env.step(action)
+        
+        return env.get_generated_wave()

@@ -93,10 +93,13 @@ class OshaberiEnv(object):
         wave = self.generate_wave(pitch,power,duration)
         self.generated_wave = np.concatenate([self.generated_wave,wave])
         wave = torch.from_numpy(self.generated_wave).to(self.device,self.dtype)
-        gened_spect = self.mel_spector(wave).log1p().T
+        gened_spect = self.mel_spector(wave).T[:self.spect_len].log1p()
         reward = self.get_reward(gened_spect,self.generated_spect_len)
-        mean_reward = reward / (gened_spect.size(0) - self.generated_spect_len)
-
+        gl = self.spect_len - self.generated_spect_len
+        if gl:
+            mean_reward = reward / gl
+        else:
+            mean_reward = 0.0
 
         self.generated_spect_len = gened_spect.size(0)
         gened_spect = torch.cat([gened_spect, self.generated_pad_spect[self.generated_spect_len:] ] ,dim=0)
@@ -114,17 +117,17 @@ class OshaberiEnv(object):
         tgt = self.source_spect[previous_length:gl]
         g= generated_spect[previous_length:]
         delta = tgt - g
-        r = -torch.sum(torch.mean(delta * delta,dim=1))
+        r = -torch.sum(torch.mean(delta * delta,dim=1)).item()
         return r
     
     def get_duration(self,out_duration:float) -> int:
         """convert output duration to real duration"""
-        out_duration = int((out_duration + 1) / 2 * self.max_duration)
+        out_duration = int((out_duration + 1) * 0.5 * self.max_duration)
         out_duration = np.clip(out_duration,self.min_duration,self.max_duration)
         return out_duration
 
     def get_power(self, out_power:float) -> float:
-        return np.clip(out_power,0.0,self.power_range)        
+        return np.clip(out_power*self.power_range,0.0,self.power_range)        
 
     def get_n_shift(self, out_pitch:float) -> float:
         return out_pitch * self.pitch_shift_range
@@ -146,7 +149,7 @@ class OshaberiEnv(object):
         return action
 
     def get_generated_wave(self) -> np.ndarray:
-        return self.generate_wave
+        return self.generated_wave
 
     def get_observation_space_size(self) -> tuple:
         s = (self.num_mels,self.spect_len)

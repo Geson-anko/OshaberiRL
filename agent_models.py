@@ -58,9 +58,7 @@ class BaseModel(nn.Module):
         x = torch.cat([x0,x1],dim=1).relu()
         for i in range(self.n_downsamples):
             x = self.ds_convs[i](x).relu()
-            print("ds conv",i,x.shape)
             x = self.res_blocks[i](x)
-            print("res conv",i,x.shape)
 
         x = self.gap(x).squeeze(-1)
         x = self.linear_post(x)
@@ -151,7 +149,7 @@ class _sac_critic(nn.Module):
     def forward(self, states:tuple[torch.Tensor],action:torch.Tensor) -> torch.Tensor:
 
         x1 = self.s_net(states[0],states[1])
-        x2= self.a_net(action[None,])
+        x2= self.a_net(action)
         x = torch.cat([x1,x2],dim=-1).relu()
         x = self.linear_post(x)
         return x

@@ -67,3 +67,6 @@ def get_stft_outlen(breath_len:int,hop_length:int) -> int:
 
 def get_stft_outch(n_fft:int) -> int:
     return (n_fft//2) + 1
+
+def from_precision(precision:int) -> torch.dtype:
+    return torch.__getattribute__(f"float{precision}")

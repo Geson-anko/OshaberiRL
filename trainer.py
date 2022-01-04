@@ -10,7 +10,7 @@ from datetime import timedelta
 class Trainer:
     def __init__(
         self,config:AttrDict, env:OshaberiEnv, env_test:OshaberiEnv,algo:SAC,
-        num_steps:int, eval_interval:int, num_eval_episodes:int,
+        num_steps:int, eval_interval:int, num_eval_episodes:int=3,
         log_writer:SummaryWriter = None,log_interval:int=16
         ) -> None:
         self.h = config
@@ -35,10 +35,12 @@ class Trainer:
         self.num_eval_episodes = num_eval_episodes
         # Tensorboard に記録するインターバル
         self.log_interval = log_interval
+        print(f"Training settings\nnum_steps: {self.num_steps}, eval_interval: {eval_interval}, num_eval_episode: {num_eval_episodes}")
+
     def train(self):
 
         self.start_time = time.time()
-
+        print("Training Start!")
         t = 0
 
         state = self.env.reset()
@@ -65,13 +67,13 @@ class Trainer:
 
             while (not done):
                 action = self.algo.exploit(state)
-                state, reward, done, _ = self.env_test.step(action)
+                state, reward, done, mean_reward = self.env_test.step(action)
                 episode_return += reward
-            self.log_writer.add_scalar("evaluate total reward",episode_return)
-            self.log_writer.add_audio("generated audio",torch.from_numpy(self.env_test.get_generated_wave()),sample_rate=self.h.frame_rate)
             returns.append(episode_return)
         mean_return = np.mean(returns)
-        self.log_writer.add_scalar("evaluate mean return",mean_return)
+        self.log_writer.add_scalar("evaluate mean return",mean_return,steps)
+        self.log_writer.add_audio("generated audio",torch.from_numpy(self.env_test.get_generated_wave()),steps,sample_rate=self.h.frame_rate)
+        self.algo.save_checkpoint(self.log_writer.get_logdir())
 
         print(f'Num steps: {steps:<6}   '
               f'Return: {mean_return:<5.1f}   '

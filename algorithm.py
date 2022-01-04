@@ -230,10 +230,11 @@ class SAC(Algorithm):
         self.optim_critic.zero_grad()
         (loss_critic1 + loss_critic2).backward(retain_graph=False)
         self.optim_critic.step()
-
+        loss = (loss_critic1+loss_critic2)*0.5
         self.log_scaler("loss_critic1",loss_critic1)
         self.log_scaler("loss_critic2",loss_critic2)
-        self.log_scaler("loss_critic",(loss_critic1+loss_critic2)*0.5)
+        self.log_scaler("loss_critic",loss)
+        return loss.item()
 
     def update_actor(self, states:tuple[torch.Tensor]) -> None:
         actions, log_pis= self.actor.sample(states)
@@ -244,6 +245,7 @@ class SAC(Algorithm):
         self.optim_actor.step()
 
         self.log_scaler("loss_actor",loss_actor)
+        return loss_actor.item()
 
     def update_target(self):
         for t, s in zip(self.critic_target.parameters(), self.critic.parameters()):

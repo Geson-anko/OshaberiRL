@@ -42,7 +42,7 @@ class Trainer:
             }
         print(f"Training settings\n{self.training_config}")
         self.h.update(self.training_config)
-        
+
     def train(self):
         print("Training Start!")
         self.log_writer.add_hparams(self.h,{})
@@ -62,6 +62,7 @@ class Trainer:
 
             if steps% self.log_interval:
                 self.log_writer.add_scalar("reward",r,steps)
+                self.log_writer.add_scalar("MSE reward",mr,steps)
 
     def evaluate(self, steps):
         """ 複数エピソード環境を動かし，平均収益を記録する． """

@@ -125,6 +125,24 @@ class Algorithm(ABC):
 
         return output_path
 
+    def load_parameters(self,
+        actor:str = None, critic:str = None, critic_tgt:str = None,
+        optim_A:str = None,optim_C:str = None,
+    ) -> None:
+        """
+        Please path/to/parameter
+        """
+        if actor:
+            self.actor.load_state_dict(torch.load(actor,self.device))
+        if critic:
+            self.critic.load_state_dict(torch.load(critic,self.device))
+        if critic_tgt:
+            self.critic_target.load_state_dict(torch.load(critic_tgt,self.device))
+        if optim_A:
+            self.optim_actor.load_state_dict(torch.load(optim_A,self.device))
+        if optim_C:
+            self.optim_critic.load_state_dict(torch.load(optim_C,self.device))
+
 class SAC(Algorithm):
     def __init__(
         self, config:AttrDict,device="cuda",dtype=torch.float,buf_device='cpu',buf_dtype=torch.float,
@@ -255,6 +273,7 @@ class SAC(Algorithm):
     def log_scaler(self, name:str, value) -> None:
         if self.logger:
             self.logger.add_scalar(name,value,self.learning_steps)
+
 
     @torch.no_grad()
     def generate_voice(self,env:OshaberiEnv, source_spect:torch.Tensor=None) -> np.ndarray:

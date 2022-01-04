@@ -1,10 +1,11 @@
 from abc import ABC,abstractmethod
 import torch
 from agent_models import SACActor,SACCritic
-from utils import AttrDict,get_stft_outlen
+from utils import AttrDict,get_stft_outlen,get_now
 import numpy as np
 from environment import OshaberiEnv
-
+import os
+from torch.utils.tensorboard import SummaryWriter
 class ReplayBuffer(object):
 
     def __init__(self, config:AttrDict,device:torch.device="cpu",dtype:torch.dtype=torch.float) -> None:
@@ -60,6 +61,9 @@ class Algorithm(ABC):
     device:torch.device
     dtype:torch.dtype
 
+    optim_actor:torch.optim.Adam
+    optim_critic:torch.optim.Adam
+
     def explore(self, state:tuple[torch.Tensor]) -> tuple[torch.Tensor, float]:
         """ 確率論的な行動と，その行動の確率密度の対数 \log(\pi(a|s)) を返す． """
         with torch.no_grad():
@@ -94,9 +98,37 @@ class Algorithm(ABC):
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
 
+    def save_checkpoint(self,output_path:str=None) -> str:
+        output_path = self.save_model(output_path)
+        optimA_path = f"{output_path}/optim_actor.pth"
+        optimC_path = f"{output_path}/optim_critic.pth"
+        torch.save(self.optim_actor.state_dict(),optimA_path)
+        torch.save(self.optim_critic.state_dict(),optimC_path)
+        return output_path
+
+    def save_model(self,output_path:str=None) -> str:
+        """
+        save_format is path/to/name/{actor|critic|critictgt}.pth
+        """
+        if output_path is None:
+            output_path = f"parameters/{get_now()}"
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        
+        actor_path = f"{output_path}/actor.pth"
+        critic_path = f"{output_path}/critic.pth"
+        critictgt_path = f"{output_path}/critictgt.pth"
+
+        torch.save(self.actor.state_dict(), actor_path)
+        torch.save(self.critic.state_dict(),critic_path)
+        torch.save(self.critic_target.state_dict(),critictgt_path)
+
+        return output_path
 
 class SAC(Algorithm):
-    def __init__(self, config:AttrDict,device="cuda",dtype=torch.float,buf_device='cpu',buf_dtype=torch.float):
+    def __init__(
+        self, config:AttrDict,device="cuda",dtype=torch.float,buf_device='cpu',buf_dtype=torch.float,
+        logger:SummaryWriter=None):
         super().__init__()
 
         self.seed = config.seed 
@@ -114,6 +146,8 @@ class SAC(Algorithm):
         self.tau = config.tau
         self.alpha = config.alpha
         self.reward_scale = config.reward_scale
+
+        self.logger = logger
 
         # set seed
         self.reset_seed(self.seed)
@@ -135,6 +169,22 @@ class SAC(Algorithm):
         self.optim_actor = torch.optim.Adam(self.actor.parameters(), lr=self.lr_actor)
         self.optim_critic = torch.optim.Adam(self.critic.parameters(), lr=self.lr_critic)
 
+    def explore(self, state: tuple[torch.Tensor]) -> tuple[torch.Tensor, float]:
+        state = self._add_batch_axis(*state)
+        a,l= super().explore(state)
+        return a.squeeze(0),l
+    def exploit(self, state: tuple[torch.Tensor]) -> torch.Tensor:
+        state = self._add_batch_axis(*state)
+        action = super().exploit(state)
+        return action.squeeze(0)
+
+    def _add_batch_axis(self, *tensors:torch.Tensor) -> tuple[torch.Tensor]:
+        x = [i.unsqueeze(0) for i in tensors]
+        return tuple(x)
+
+    def _remove_batch_axis(self, *tensors:torch.Tensor) -> tuple[torch.Tensor]:
+        x = [i.squeeze(0) for i in tensors]
+        return tuple(x)
 
     def is_update(self, steps:int) -> bool:
         return steps >= max(self.start_steps,self.batch_size)
@@ -148,7 +198,7 @@ class SAC(Algorithm):
         else:
             action,_ = self.explore(state)
 
-        next_state, reward, done ,_ = env.step(action)
+        next_state, reward, done ,mean_reward = env.step(action)
 
         self.buffer.append(state,action,reward,done,next_state)
 
@@ -156,7 +206,7 @@ class SAC(Algorithm):
             t = 0
             next_state = env.reset()
 
-        return next_state, t
+        return next_state, t,reward,mean_reward
 
     def update(self):
         self.learning_steps += 1
@@ -177,10 +227,13 @@ class SAC(Algorithm):
 
         loss_critic1 = (curr_qs1 - target_qs).pow_(2).mean()
         loss_critic2 = (curr_qs2 - target_qs).pow_(2).mean()
-
         self.optim_critic.zero_grad()
-        (loss_critic1 + loss_critic2).backward(return_graph=False)
+        (loss_critic1 + loss_critic2).backward(retain_graph=False)
         self.optim_critic.step()
+
+        self.log_scaler("loss_critic1",loss_critic1)
+        self.log_scaler("loss_critic2",loss_critic2)
+        self.log_scaler("loss_critic",(loss_critic1+loss_critic2)*0.5)
 
     def update_actor(self, states:tuple[torch.Tensor]) -> None:
         actions, log_pis= self.actor.sample(states)
@@ -190,7 +243,13 @@ class SAC(Algorithm):
         loss_actor.backward(retain_graph=False)
         self.optim_actor.step()
 
+        self.log_scaler("loss_actor",loss_actor)
+
     def update_target(self):
         for t, s in zip(self.critic_target.parameters(), self.critic.parameters()):
             t.data.mul_(1.0 - self.tau)
             t.data.add_(self.tau * s.data)
+
+    def log_scaler(self, name:str, value) -> None:
+        if self.logger:
+            self.logger.add_scalar(name,value,self.learning_steps)

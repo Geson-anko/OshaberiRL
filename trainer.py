@@ -35,18 +35,24 @@ class Trainer:
         self.num_eval_episodes = num_eval_episodes
         # Tensorboard に記録するインターバル
         self.log_interval = log_interval
-        print(f"Training settings\nnum_steps: {self.num_steps}, eval_interval: {eval_interval}, num_eval_episode: {num_eval_episodes}")
-
+        self.training_config = {
+            "num_steps":num_steps,
+            "eval_interval":eval_interval,
+            "num_eval_episodes":num_eval_episodes
+            }
+        print(f"Training settings\n{self.training_config}")
+        self.h.update(self.training_config)
+        
     def train(self):
-
-        self.start_time = time.time()
         print("Training Start!")
+        self.log_writer.add_hparams(self.h,{})
+        self.start_time = time.time()
         t = 0
 
         state = self.env.reset()
 
         for steps in range(1, self.num_steps + 1):
-            state,t,r = self.algo.step(self.env,state,t,steps)
+            state,t,r,mr = self.algo.step(self.env,state,t,steps)
 
             if self.algo.is_update(steps):
                 self.algo.update()

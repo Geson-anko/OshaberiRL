@@ -22,15 +22,15 @@ if __name__ == '__main__':
     num_eval_episode = args.num_eval_episode
     log_dir = args.logdir
     logname = args.logname
-    #log_writer = SummaryWriter(log_dir,logname)
+    log_writer = SummaryWriter()
     
     config = load_config(config_file)
     
     env = OshaberiEnv(config,dataset_file,on_memory,device,dtype)
     env_test = OshaberiEnv(config,dataset_file,on_memory,device,dtype)
 
-    algo = SAC(config,device,dtype,buf_device,dtype)
-    trainer = Trainer(config,env,env_test, algo,num_steps,eval_interval,num_eval_episode)
+    algo = SAC(config,device,dtype,buf_device,dtype,log_writer)
+    trainer = Trainer(config,env,env_test, algo,num_steps,eval_interval,num_eval_episode,log_writer)
 
 
     trainer.train()

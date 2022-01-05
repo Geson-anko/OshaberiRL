@@ -59,11 +59,13 @@ class OshaberiEnv(object):
         self.generated_spect = self.generated_pad_spect
         return (self.source_spect.T, self.generated_pad_spect.T)
 
+    source_wave:torch.Tensor
     source_spect:torch.Tensor# (timestep, channels)
     generated_pad_spect:torch.Tensor
     def set_initial_state(self) -> None:
         """set source spectrogram and empty generated spectrogram tensor. """
         wave = self.dataset[0][0].squeeze(0).to(self.device,self.dtype)
+        self.source_wave = wave
         mel = torch.log1p(self.mel_spector(wave)).T
         self.source_spect = mel
         self.generated_pad_spect = torch.ones_like(mel) * -1

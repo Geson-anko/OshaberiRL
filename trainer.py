@@ -67,19 +67,26 @@ class Trainer:
     def evaluate(self, steps):
         """ 複数エピソード環境を動かし，平均収益を記録する． """
         returns = []
+        log_wave = torch.empty((0,),torch.float)
         for _ in range(self.num_eval_episodes):
             state = self.env_test.reset()
             done = False
             episode_return = 0.0
-
+            
             while (not done):
                 action = self.algo.exploit(state)
                 state, reward, done, mean_reward = self.env_test.step(action)
                 episode_return += reward
             returns.append(episode_return)
+            log_wave = torch.cat([
+                log_wave,
+                self.env_test.source_wave.cpu().detach(),
+                torch.from_numpy(self.env_test.get_generated_wave())]
+                ,dim=0)
+            
         mean_return = np.mean(returns)
         self.log_writer.add_scalar("evaluate mean return",mean_return,steps)
-        self.log_writer.add_audio("generated audio",torch.from_numpy(self.env_test.get_generated_wave()),steps,sample_rate=self.h.frame_rate)
+        self.log_writer.add_audio("generated audio",log_wave,steps,sample_rate=self.h.frame_rate)
         self.algo.save_checkpoint(self.log_writer.get_logdir())
 
         print(f'Num steps: {steps:<6}   '

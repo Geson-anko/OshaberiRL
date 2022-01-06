@@ -32,7 +32,8 @@ if __name__ == '__main__':
     algo = SAC(config,device,dtype,buf_device,dtype,log_writer)
     trainer = Trainer(config,env,env_test, algo,num_steps,eval_interval,num_eval_episode,log_writer)
 
-
-    trainer.train()
-
+    try:
+        trainer.train()
+    except:
+        print("Key board interrupt.")
     algo.save_model()

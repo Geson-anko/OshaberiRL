@@ -2,7 +2,7 @@
 data
 parameters
 runs
-!dataset.
+_tests.ipynb
 training_log
 
 # Byte-compiled / optimized / DLL files

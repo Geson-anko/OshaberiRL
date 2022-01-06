@@ -282,7 +282,7 @@ class SAC(Algorithm):
         source spect: (C,L)
         """
         env.reset()
-        if source_spect:
+        if source_spect is not None:
             env.set_source_spect(source_spect.T)
         state = (source_spect,env.generated_spect)
         done = False

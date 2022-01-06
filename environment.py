@@ -139,7 +139,7 @@ class OshaberiEnv(object):
         return out_duration
 
     def get_power(self, out_power:float) -> float:
-        return np.clip(out_power*self.power_range,0.0,self.power_range)        
+        return np.clip((out_power*0.5+0.5)*self.power_range,0.0,self.power_range)        
 
     def get_n_shift(self, out_pitch:float) -> float:
         return out_pitch * self.pitch_shift_range

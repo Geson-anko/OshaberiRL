@@ -127,7 +127,7 @@ class SACActor(nn.Module):
 
     def sample(self,states:tuple[torch.Tensor]) -> tuple[torch.Tensor]:
         x = self.layer1(states[0],states[1])
-        means,log_stds = self.layer_mean(x).squeeze(0),self.layer_log_std(x)
+        means,log_stds = self.layer_mean(x),self.layer_log_std(x)
         return reparameterize(means,log_stds.clamp(-20,2))
 
 class _sac_critic(nn.Module):

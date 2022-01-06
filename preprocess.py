@@ -55,11 +55,11 @@ class RandomSampleDataset:
         """preprocessing"""
         sound = AudioSegment.from_file(sound_file)
         if sound.channels != self.sample_ch:
-            sound.set_channels(self.sample_ch)
+            sound = sound.set_channels(self.sample_ch)
         if sound.sample_width != self.sample_width:
-            sound.set_sample_width(self.sample_width)
+            sound = sound.set_sample_width(self.sample_width)
         if sound.frame_rate != self.frame_rate:
-            sound.set_frame_rate(self.frame_rate)
+            sound = sound.set_frame_rate(self.frame_rate)
         
         array = np.array(sound.get_array_of_samples())
         file_name = os.path.split(sound_file)[-1]

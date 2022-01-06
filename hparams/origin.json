@@ -6,7 +6,7 @@
     "lr_critic":0.0001,
     "replay_size":10000,
     "start_steps":5000,
-    "tau":5e-3,
+    "tau":0.5,
     "alpha":0.2,
     "reward_scale":0.001,
 

@@ -89,7 +89,7 @@ class Trainer:
                 ,dim=0)
         eval_mse = np.mean(mse)
         mean_return = np.mean(returns)
-        self.log_writer.add_scalar("evaluate MSE",eval_mse)
+        self.log_writer.add_scalar("evaluate MSE",eval_mse,steps)
         self.log_writer.add_scalar("evaluate mean return",mean_return,steps)
         self.log_writer.add_audio("generated audio",log_wave,steps,sample_rate=self.h.frame_rate)
         self.algo.save_checkpoint(self.log_writer.get_logdir())

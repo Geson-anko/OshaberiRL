@@ -142,6 +142,7 @@ class Algorithm(ABC):
             self.optim_actor.load_state_dict(torch.load(optim_A,self.device))
         if optim_C:
             self.optim_critic.load_state_dict(torch.load(optim_C,self.device))
+            
 
 class SAC(Algorithm):
     def __init__(

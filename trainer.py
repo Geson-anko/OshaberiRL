@@ -45,7 +45,9 @@ class Trainer:
 
     def train(self):
         print("Training Start!")
-        self.log_writer.add_hparams(self.h,{})
+        h = dict(self.h)
+        h["downsample_kernel_sizes"] = torch.tensor(self.h.downsample_kernel_sizes)
+        self.log_writer.add_hparams(h,{})
         self.start_time = time.time()
         t = 0
 
@@ -67,7 +69,7 @@ class Trainer:
     def evaluate(self, steps):
         """ 複数エピソード環境を動かし，平均収益を記録する． """
         returns = []
-        log_wave = torch.empty((0,),torch.float)
+        log_wave = torch.empty((0,),dtype=torch.float)
         for _ in range(self.num_eval_episodes):
             state = self.env_test.reset()
             done = False

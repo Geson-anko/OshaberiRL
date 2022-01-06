@@ -1,11 +1,11 @@
 {
     "seed":0,
-    "batch_size":64,
+    "batch_size":256,
     "gamma":0.99,
     "lr_actor":0.0001,
     "lr_critic":0.0001,
     "replay_size":10000,
-    "start_steps":1000,
+    "start_steps":3000,
     "tau":5e-3,
     "alpha":0.2,
     "reward_scale":0.001,

@@ -157,7 +157,7 @@ class OshaberiEnv(object):
 
     def sample_action(self) -> torch.Tensor:
         """return random sampled action values"""
-        action = torch.randn(self.action_space_size,device=self.device,dtype=self.dtype)
+        action = torch.rand(self.action_space_size,device=self.device,dtype=self.dtype) * 2 - 1
         return action
 
     def get_generated_wave(self) -> np.ndarray:
@@ -182,7 +182,17 @@ class OshaberiEnv(object):
 
 if __name__ == '__main__':
     from utils import load_config
+    import sounddevice as sd
     config = load_config("hparams/origin.json")
     env = OshaberiEnv(config,"data/kiritan2021-12-07_20-40-44.csv",False)
-    ns,r,d,_ = env.step(torch.ones(3))
+    #ns,r,d,_ = env.step(torch.tensor([-1,0.5,0.3]))
+    #
+    for i in range(3):
+        action = env.sample_action()
+        action[-1] = -0.5
+        print(action)
+        env.step(action)
+    #env.save_generated_wave("data/test_generated.wav")
+
     env.reset()
+

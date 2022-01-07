@@ -1,0 +1,40 @@
+{
+    "seed":0,
+    "batch_size":1024,
+    "gamma":0.99,
+    "lr_actor":0.004,
+    "lr_critic":0.004,
+    "replay_size":50000,
+    "start_steps":5000,
+    "tau":0.5,
+    "alpha":0.2,
+    "reward_scale":0.01,
+
+    "base_voice_file":"data/sahya_g4.wav",
+    "power_range":1.0,
+    "pitch_shift_range":12.0,
+
+    "frame_rate":22050,
+    "sample_width":2,
+    "sample_ch":1,
+
+    "f_min":0,
+    "f_max":8000,
+    "num_mels":80,
+    "breath_len":44100,
+    "n_fft":1024,
+    "hop_len":256,
+    "win_len":1024,
+
+    "init_ch":64,
+    "base_out_ch":32,
+    "downsample_rate":4,
+    "downsample_kernel_sizes":[8,8],
+    "res_kernel_size":3,
+    "res_num_layers":3,
+
+    "action_space_size":3,
+    "critic_action_hdim":64
+
+
+}

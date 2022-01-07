@@ -36,6 +36,7 @@ class OshaberiEnv(object):
 
         self.sample_range = 2**(8*self.sample_width-1)
         self.power_range = config.power_range
+        self.power_min = config.power_min
         self.pitch_shift_range = config.pitch_shift_range
         self.min_duration = self.n_fft
         self.max_duration = self.breath_len
@@ -139,7 +140,7 @@ class OshaberiEnv(object):
         return out_duration
 
     def get_power(self, out_power:float) -> float:
-        return np.clip((out_power*0.5+0.5)*self.power_range,0.0,self.power_range)        
+        return np.clip((out_power*0.5+0.5)*self.power_range,self.power_min,self.power_range)        
 
     def get_n_shift(self, out_pitch:float) -> float:
         return out_pitch * self.pitch_shift_range

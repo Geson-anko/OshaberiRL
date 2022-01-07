@@ -1,3 +1,5 @@
 python train.py --dataset=data/noizes/VSQ2022-01-06_11-35-45.csv --config_file="hparams/big.json" --num_eval_episode=6 --num_steps=500000 
 
 python train.py --dataset=data/noizes/VSQ2022-01-06_11-35-45.csv
+
+python train.py --dataset=data/noizes/VSQ2022-01-06_11-35-45.csv --config_file="hparams/big_no_silence.json" --num_eval_episode=6 --num_steps=500000 

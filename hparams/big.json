@@ -12,6 +12,7 @@
 
     "base_voice_file":"data/sahya_g4.wav",
     "power_range":1.0,
+    "power_min":0.0,
     "pitch_shift_range":12.0,
 
     "frame_rate":22050,

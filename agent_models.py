@@ -5,7 +5,7 @@ from torch.nn.utils import weight_norm,remove_weight_norm
 from torchsummaryX import summary
 from layers import ResBlock
 import math
-
+from torch.utils.tensorboard import SummaryWriter
 class BaseModel(nn.Module):
     """
     This base model is to create Actor and Critic.
@@ -64,9 +64,13 @@ class BaseModel(nn.Module):
         x = self.linear_post(x)
         return x
 
-    def summary(self):
+    def summary(self,tensor_board:bool = False):
         dummy = torch.randn(self.input_size)
         summary(self,dummy,dummy)
+        if tensor_board:
+            writer = SummaryWriter()
+            writer.add_graph(self, [dummy,dummy])
+
 
     def remove_weight_norm(self):
         remove_weight_norm(self.conv_pre)
@@ -172,5 +176,5 @@ if __name__ == "__main__":
     from utils import load_config
     h = load_config("hparams/origin.json")
     m = BaseModel(h)
-    m.summary()
+    m.summary(True)
     m.remove_weight_norm()
